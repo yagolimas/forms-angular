@@ -1,8 +1,11 @@
+import { DropdownService } from './../shared/services/dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-//import { HttpClient } from '@angular/common/http';
+// import { HttpClient } from '@angular/common/http';
 import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
+import { EstadoBr } from '../shared/models/estado-br.model';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-data-form',
@@ -13,15 +16,26 @@ export class DataFormComponent implements OnInit {
 
   form: FormGroup;
 
+  estados: Observable<EstadoBr[]>;
+
+  cargos: any[];
+
   constructor(
     private formBuilder: FormBuilder,
-    private http: Http
+    private http: Http,
+    private dropdownService: DropdownService
   ) { }
 
   ngOnInit() {
 
+    this.estados = this.dropdownService.getEstadosBr();
+
+    this.cargos = this.dropdownService.getCargos();
+
+    /* this.dropdownService.getEstadosBr()
+      .subscribe(dados => this.estados = dados ); */
+
     this.form = this.formBuilder.group({
-      
       nome:  [null, Validators.required],
       email: [null, [Validators.required, Validators.email]],
 
@@ -33,20 +47,21 @@ export class DataFormComponent implements OnInit {
         bairro: [null, [Validators.required]],
         cidade: [null, [Validators.required]],
         estado: [null, [Validators.required]]
-      })
+      }),
+      cargo: [null]
     });
   }
 
   onSubmit() {
 
-    console.log(this.form.value)
-    
+    console.log(this.form.value);
+
     if (this.form.valid) {
 
       this.http.post('https://httpbin.org/post', JSON.stringify(this.form.value))
-        .subscribe(dados => { 
-          console.log(dados)
-          //this.reset();
+        .subscribe(dados => {
+          console.log(dados);
+          // this.reset();
         },
         (error: any) => alert('error')
       );
@@ -63,21 +78,21 @@ export class DataFormComponent implements OnInit {
       control.markAsDirty();
       if (control instanceof FormGroup) {
         this.verificaValidacoesForm(control);
-      }     
+      }
     });
   }
 
   verificaValidTouched(campo: string) {
 
-    return !this.form.get(campo).valid && (this.form.get(campo).touched || this.form.get(campo).dirty); 
+    return !this.form.get(campo).valid && (this.form.get(campo).touched || this.form.get(campo).dirty);
 
-    //return !campo.valid && campo.touched;
+    // return !campo.valid && campo.touched;
   }
 
   verificaEmailInvalido() {
-    
+
     let campoEmail = this.form.get('email');
-    
+
     if (campoEmail.errors) {
       return campoEmail.errors['email'] && campoEmail.touched;
     }
@@ -88,7 +103,7 @@ export class DataFormComponent implements OnInit {
     return {
       'has-error': this.verificaValidTouched(campo),
       'has-feedback': this.verificaValidTouched(campo)
-    }
+    };
   }
 
   consultaCEP() {
@@ -102,12 +117,10 @@ export class DataFormComponent implements OnInit {
     if (cep !== '') {
       // Expressão regular para validar o CEP.
       const validacep = /^[0-9]{8}$/;
-      
+
       // Valida o formato do CEP.
       if (validacep.test(cep)) {
-        
-        //this.resetaDadosForm();
-        
+        // this.resetaDadosForm();
         this.http.get(`//viacep.com.br/ws/${cep}/json`)
           .map(dados => dados.json())
           .subscribe(dados => this.populaDadosForm(dados))
@@ -119,7 +132,7 @@ export class DataFormComponent implements OnInit {
 
     this.form.patchValue({
       endereco: {
-        //cep: dados.cep,        
+        // cep: dados.cep,
         rua: dados.logradouro,
         bairro: dados.bairro,
         complemento: dados.complemento,
@@ -128,7 +141,7 @@ export class DataFormComponent implements OnInit {
       }
     });
 
-    this.form.get('nome').setValue('Yago') 
+    this.form.get('nome').setValue('Yago')
   }
 
   resetaDadosForm() {
@@ -148,5 +161,15 @@ export class DataFormComponent implements OnInit {
 
   reset() {
     this.form.reset();
+  }
+
+  setarCargo() {
+    const cargo = { nome: 'Dev', nivel: 'Junior', desc: 'Dev Jr' };
+
+    this.form.get('cargo').setValue(cargo);
+  }
+
+  compararCargos(obj1, obj2) {
+    return obj1 && obj2 ? (obj1.nome === obj2.nome && obj1.nivel === obj2.nivel) : obj1 && obj2;
   }
 }
