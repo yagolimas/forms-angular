@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { ErrorMsgComponent } from './error-msg/error-msg.component';
 import { InputFieldComponent } from './input-field/input-field.component';
 import { BaseFormComponent } from './base-form/base-form.component';
+import { ConsultaCepService } from './services/consulta-cep.service';
 
 @NgModule({
   imports: [
@@ -28,6 +29,9 @@ import { BaseFormComponent } from './base-form/base-form.component';
     ErrorMsgComponent,
     InputFieldComponent
   ],
-  providers: [ DropdownService ]
+  providers: [
+    DropdownService,
+    ConsultaCepService
+  ]
 })
 export class SharedModule { }

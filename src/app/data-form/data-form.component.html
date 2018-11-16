@@ -138,12 +138,58 @@
     </div>
   </div><!-- div cargo -->
 
+  <div class="form-group">
+    <div class="col-md-3">
+
+      <label for="tecnologias" class="control-label">Tecnologias</label>
+      <select multiple formControlName="tecnologias" class="form-control" id="tecnologias">
+        <option *ngFor="let tecnologias of tecnologias" [value]="tecnologias.nome"> {{ tecnologias.desc }} </option>
+      </select>
+    </div>
+
+    <div class="col-md-3" [ngClass]="aplicaCss('newsletter')">
+      <label for="tecnologias" class="control-label">Newsletter</label>
+      <div id="newsletter" class="row">
+        <div class="col-sm-4" *ngFor="let item of newsletterOp">
+          <label class="radio-inline">
+            <input type="radio" [value]="item.valor" formControlName="newsletter" /> {{ item.desc }}
+          </label>
+        </div>
+      </div>
+    </div>
+  </div><!-- div tecnologias e newsletter -->
+
+  <div class="form-group">
+
+    <div class="col-md-3" [ngClass]="aplicaCss('termos')">
+      <div class="checkbox">
+        <label class="checkbox-inline">
+          <input type="checkbox" formControlName="termos"> Aceito os termos.
+        </label>
+      </div>
+    </div>
+
+    <div class="col-md-3" [ngClass]="aplicaCss('frameworks')">
+      <label for="frameworks">Frameworks</label>
+      <div id="frameworks" class="row">
+        <div class="checkbox" class="col-sm-4"
+          formArrayName="frameworks"
+          *ngFor="let framework of form.get('frameworks').controls; let i = index">
+
+          <label class="checkbox-inline">
+            <input type="checkbox" [formControlName]="i"/> {{ frameworks[i] }}
+          </label>
+        </div>
+      </div>
+    </div><!-- div frameworks -->
+  </div><!-- div termos e frameworks-->
+
   <div class="col-sm-12">
     <button type="submit" class="btn btn-primary">Submit</button>
     <button type="submit" class="btn">Cancelar</button>
     <button type="submit" class="btn" (click)="setarCargo()">Cargo</button>
+    <button type="submit" class="btn" (click)="setarTecnologia()">Tecnologias</button>
   </div>
 
-
-  <!-- <app-form-debug [form]="f"></app-form-debug> -->
+  <app-form-debug [form]="form"></app-form-debug>
 </form>

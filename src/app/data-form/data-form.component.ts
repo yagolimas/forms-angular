@@ -1,11 +1,12 @@
 import { DropdownService } from './../shared/services/dropdown.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 // import { HttpClient } from '@angular/common/http';
 import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { EstadoBr } from '../shared/models/estado-br.model';
 import { Observable } from 'rxjs/Observable';
+import { ConsultaCepService } from '../shared/services/consulta-cep.service';
 
 @Component({
   selector: 'app-data-form',
@@ -20,10 +21,17 @@ export class DataFormComponent implements OnInit {
 
   cargos: any[];
 
+  tecnologias: any[];
+
+  newsletterOp: any[];
+
+  frameworks = ['Angular', 'React', 'Vue', 'Ember'];
+
   constructor(
     private formBuilder: FormBuilder,
     private http: Http,
-    private dropdownService: DropdownService
+    private dropdownService: DropdownService,
+    private cepService: ConsultaCepService
   ) { }
 
   ngOnInit() {
@@ -31,6 +39,10 @@ export class DataFormComponent implements OnInit {
     this.estados = this.dropdownService.getEstadosBr();
 
     this.cargos = this.dropdownService.getCargos();
+
+    this.tecnologias = this.dropdownService.getTecnologias();
+
+    this.newsletterOp = this.dropdownService.getNewsletter();
 
     /* this.dropdownService.getEstadosBr()
       .subscribe(dados => this.estados = dados ); */
@@ -48,7 +60,11 @@ export class DataFormComponent implements OnInit {
         cidade: [null, [Validators.required]],
         estado: [null, [Validators.required]]
       }),
-      cargo: [null]
+      cargo: [null],
+      tecnologias: [null],
+      newsletter: ['s'],
+      termos: [null],
+      frameworks: this.buildFrameworks()
     });
   }
 
@@ -56,9 +72,19 @@ export class DataFormComponent implements OnInit {
 
     console.log(this.form.value);
 
+    let valueSubmit = Object.assign({}, this.form.value);
+
+    valueSubmit = Object.assign(valueSubmit, {
+      frameworks: valueSubmit.frameworks
+      .map((value, i) => value ? this.frameworks[i] : null)
+      .filter(value => value !== null)
+    });
+
+    console.log(valueSubmit);
+
     if (this.form.valid) {
 
-      this.http.post('https://httpbin.org/post', JSON.stringify(this.form.value))
+      this.http.post('https://httpbin.org/post', JSON.stringify({}))
         .subscribe(dados => {
           console.log(dados);
           // this.reset();
@@ -71,10 +97,10 @@ export class DataFormComponent implements OnInit {
   }
 
   verificaValidacoesForm(formGroup: FormGroup) {
-    let campos = formGroup.controls;
+    const campos = formGroup.controls;
 
     Object.keys(campos).forEach(campo => {
-      let control = formGroup.get(campo);
+      const control = formGroup.get(campo);
       control.markAsDirty();
       if (control instanceof FormGroup) {
         this.verificaValidacoesForm(control);
@@ -91,7 +117,7 @@ export class DataFormComponent implements OnInit {
 
   verificaEmailInvalido() {
 
-    let campoEmail = this.form.get('email');
+    const campoEmail = this.form.get('email');
 
     if (campoEmail.errors) {
       return campoEmail.errors['email'] && campoEmail.touched;
@@ -108,23 +134,11 @@ export class DataFormComponent implements OnInit {
 
   consultaCEP() {
 
-    let cep = this.form.get('endereco.cep').value;
+    const cep = this.form.get('endereco.cep').value;
 
-    // Nova variável "cep" somente com dígitos.
-    cep = cep.replace(/\D/g, '');
-
-    // Verifica se campo cep possui valor informado.
-    if (cep !== '') {
-      // Expressão regular para validar o CEP.
-      const validacep = /^[0-9]{8}$/;
-
-      // Valida o formato do CEP.
-      if (validacep.test(cep)) {
-        // this.resetaDadosForm();
-        this.http.get(`//viacep.com.br/ws/${cep}/json`)
-          .map(dados => dados.json())
-          .subscribe(dados => this.populaDadosForm(dados))
-      }
+    if (cep != null && cep !== '') {
+      this.cepService.consultaCEP(cep)
+      .subscribe(dados => this.populaDadosForm(dados));
     }
   }
 
@@ -141,7 +155,7 @@ export class DataFormComponent implements OnInit {
       }
     });
 
-    this.form.get('nome').setValue('Yago')
+    this.form.get('nome').setValue('Yago');
   }
 
   resetaDadosForm() {
@@ -167,6 +181,16 @@ export class DataFormComponent implements OnInit {
     const cargo = { nome: 'Dev', nivel: 'Junior', desc: 'Dev Jr' };
 
     this.form.get('cargo').setValue(cargo);
+  }
+
+  setarTecnologia() {
+    this.form.get('tecnologias').setValue(['java', 'javascript', 'php']);
+  }
+
+  buildFrameworks() {
+    const values = this.frameworks.map(v => new FormControl(false));
+
+    return this.formBuilder.array(values);
   }
 
   compararCargos(obj1, obj2) {
